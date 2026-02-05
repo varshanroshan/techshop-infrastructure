@@ -1,0 +1,33 @@
+# Node
+node_modules/
+npm-debug.log
+
+# Python
+__pycache__/
+*.pyc
+
+# Java / Maven
+target/
+*.class
+
+# Go
+bin/
+
+# Docker
+*.tar
+
+# Terraform
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+*.tfvars
+
+# Kubernetes
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Mac / Linux
+.DS_Store
