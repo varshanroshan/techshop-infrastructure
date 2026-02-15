@@ -1,0 +1,14 @@
+const express = require("express");
+const app = express();
+
+// Route de test (health check)
+app.get("/", (req, res) => {
+  res.send("TechShop API Gateway is running ✅");
+});
+
+// Le port vient de la variable d'environnement (ou 3000 par défaut)
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`API Gateway listening on port ${PORT}`);
+});

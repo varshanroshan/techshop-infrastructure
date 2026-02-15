@@ -1,0 +1,63 @@
+services:
+
+  postgres:
+    image: postgres:16
+    container_name: techshop-postgres
+    environment:
+      POSTGRES_DB: techshop
+      POSTGRES_USER: techshop
+      POSTGRES_PASSWORD: techshoppass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: techshop-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: techshop-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: unless-stopped
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: techshop-api-gateway
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    environment:
+      PORT: 3000
+      NODE_ENV: development
+    restart: unless-stopped
+
+  user-service:
+    build: ./user-service
+    container_name: techshop-user-service
+    ports:
+      - "8001:8001"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  product-service:
+    build: ./product-service
+    container_name: techshop-product-service
+    ports:
+      - "8002:8002"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
