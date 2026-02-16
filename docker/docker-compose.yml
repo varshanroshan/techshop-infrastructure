@@ -58,6 +58,13 @@ services:
       - "8002:8002"
     restart: unless-stopped
 
+  order-service:
+    build: ./order-service
+    container_name: techshop-order-service
+    ports:
+      - "8003:8003"
+    restart: unless-stopped
+
 volumes:
   postgres_data:
 
