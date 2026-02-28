@@ -7,3 +7,5 @@ data:
   PRODUCT_SERVICE_URL: "http://product-service:8002"
   USER_SERVICE_URL: "http://user-service:8001"
   ORDER_SERVICE_URL: "http://order-service:8003"
+  REDIS_URL: "redis://redis:6379"
+  RABBITMQ_URL: "amqp://rabbitmq:5672"
