@@ -1,0 +1,66 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API Gateway Image
+        working-directory: ./docker
+        run: docker compose build api-gateway
+
+      - name: Build User Service Image
+        working-directory: ./docker
+        run: docker compose build user-service
+
+      - name: Build Product Service Image
+        working-directory: ./docker
+        run: docker compose build product-service
+
+      - name: Build Order Service Image
+        working-directory: ./docker
+        run: docker compose build order-service
+
+  security_scan:
+    needs: build_and_test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner in repo mode
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+
+  # The deploy step is mocked here since we don't have absolute credentials 
+  # set up for Docker Hub or AWS EKS in the repository secrets.
+  mock_deploy:
+    needs: security_scan
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Simulate Kubernetes Deployment
+        run: |
+          echo "Simulating kubectl apply for Kubernetes Manifests..."
+          echo "kubectl apply -f kubernetes/base/"
+          echo "Deploy successful!"
