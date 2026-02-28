@@ -27,6 +27,8 @@ L'application TechShop est composée des microservices suivants :
 * **Redis** : Cache en mémoire
 * **RabbitMQ** : File de messages asynchrone
 
+*Toutes les images applicatives (`api-gateway`, `user-service`, `product-service`, `order-service`) sont construites avec des **multi-stage builds** Docker pour garantir des images légères et optimisées.*
+
 ---
 
 ## Déploiement Local
@@ -76,7 +78,7 @@ L'orchestration de production est gérée avec Kubernetes. Les manifests se trou
    ```bash
    kubectl apply -f ingress.yaml
    ```
-   *Note : N'oubliez pas d'ajouter une résolution DNS locale dans votre fichier `/etc/hosts` ou `C:\Windows\System32\drivers\etc\hosts`:* `127.0.0.1 techshop.local` (ajustez l'IP en fonction de votre Ingress Controller/Minikube)
+   *Note : L'Ingress est configuré pour supporter le **HTTPS (TLS)** via le secret `techshop-tls-secret`. N'oubliez pas d'ajouter une résolution DNS locale dans votre fichier `/etc/hosts`:* `127.0.0.1 techshop.local`
 
 4. Appliquez les stratégies de sécurité (Network Policies) et l'AutoScaling (HPA) :
    ```bash
@@ -89,7 +91,9 @@ L'orchestration de production est gérée avec Kubernetes. Les manifests se trou
 
 ## Infrastructure as Code (Terraform)
 
-L'infrastructure Cloud (AWS) est gérée avec Terraform pour créer un Cluster Elastic Kubernetes Service (EKS).
+L'infrastructure Cloud (AWS) est gérée avec Terraform pour créer un Cluster Elastic Kubernetes Service (EKS). 
+L'état est distant et collaboratif via le backend d'état **(Amazon S3 + DynamoDB)**, garantissant la sécurité des déploiements.
+Le code Terraform est modulaire et divisé en environnements distincts **(dev, prod)**.
 
 ```bash
 cd terraform
@@ -101,8 +105,8 @@ terraform init
 terraform validate
 
 # Planification et provisionnement (Nécessite des identifiants AWS configurés)
-terraform plan
-terraform apply
+terraform plan -var-file="environments/dev/terraform.tfvars"
+terraform apply -var-file="environments/dev/terraform.tfvars"
 ```
 > Le cluster provisionné par défaut s'appelle `techshop-cluster` et inclut la configuration VPC (Public/Private Subnets, NAT Gateways).
 
@@ -129,5 +133,14 @@ Le pipeline (`.github/workflows/ci.yml`) réalise automatiquement les tâches su
 ### Liveness et Readiness
 Des `LivenessProbes` et `ReadinessProbes` HTTP sont implémentées pour les services applicatifs pour vérifier leur santé opérationnelle. Par exemple, le `api-gateway` et le `user-service`.
 
-### Auto-Scaling
+### Auto-Scaling (HPA)
 Des **Horizontal Pod Autoscalers (HPA)** surveillent la charge CPU et allouent dynamiquement entre 1 et 5 pods au `product-service` pour gérer les montées de charge.
+
+### Observabilité (Monitoring et Logging)
+La stack complète d'observabilité de base a été mise en place avec le **Kube-Prometheus-Stack** (Prometheus, Grafana) pour les métriques et **Loki-Stack** (Loki, Promtail) pour les logs centralisés.
+Un script automatisé Helm a été fourni pour installer la stack complète :
+```bash
+bash monitoring/setup.sh
+```
+Une fois déployé, vous pouvez accéder aux Dashboards Grafana sur la machine locale via :
+`kubectl port-forward svc/prometheus-grafana 8080:80 -n monitoring`

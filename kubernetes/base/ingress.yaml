@@ -5,6 +5,10 @@ metadata:
   namespace: techshop
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - techshop.local
+      secretName: techshop-tls-secret
   rules:
     - host: techshop.local
       http:
