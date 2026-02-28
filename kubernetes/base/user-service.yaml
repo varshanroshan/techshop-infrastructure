@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  namespace: techshop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+        - name: user-service
+          image: techshop-user-service:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8001
+          livenessProbe:
+            httpGet:
+              path: /users
+              port: 8001
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /users
+              port: 8001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  namespace: techshop
+spec:
+  type: NodePort
+  selector:
+    app: user-service
+  ports:
+    - port: 8001
+      targetPort: 8001
+      nodePort: 30011
